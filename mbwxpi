@@ -1,0 +1,14 @@
+# uci based configuration file for meteobridge wxnow.txt file plugin weather station
+# used by awk program mbwxpi.plugin
+config mbwxpi
+		# os command line to read wxnow.txt file from a webserver
+	option wxnow_cmd "wget -q -O - 'http://104.56.43.104/wxnow.txt' 2>/dev/null"
+		# station altitude in meters
+	option station_altitude "277.98"
+		# pathname to meteobridge logfile
+option logfile "/tmp/log/mbwxpi.log"
+#	option logfile "/tmp/log/meteobridge.log"
+		# plugin polling interval in seconds
+	option pollsleep "60"
+		# flag set to 3 for vebose logging, 2 to write brief messages to logfile, set to 1 for no logging, except errors, set to 0 for no logging
+	option writetolog "2"
