@@ -115,7 +115,10 @@ BEGIN {
 	uci | getline item
 	close(uci)
 	if(length(item) > 0)
+	{
 		total_rain = item + 0.0
+		last_total_rain = total_rain
+	}
 	uci = "uci -c "conf" get "myname".@"myname"[0].logfile 2>/dev/null"
 	item = ""	
 	uci | getline item
