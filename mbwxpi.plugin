@@ -25,7 +25,7 @@
 #	weatherstation. Operation of the plugin is customized by editing the
 #	accompanying UCI style config file.
 #
-#	Written 25-Mar-2021 by Fred T. Trimble Ver 0.9.8 (ftt@smtcpa.com) and user AlaskaWX on Meteobridge forum
+#	Written 25-Mar-2021 by Fred T. Trimble Ver 0.9.8a (ftt@smtcpa.com) and user AlaskaWX on Meteobridge forum
 #
 #	wxnow.txt file format per https://cumuluswiki.org/a/Wxnow.txt
 #	Feb 01 2009 12:34
@@ -64,15 +64,12 @@ function ftoc (f)
 BEGIN {
 
 	myname = "mbwxpi"
-	ver = "0.9.8" # version
+	ver = "0.9.8a" # version
 	exit_code = -1
 	last_time = 0.0
 	this_time = 0.0
-	rain_1hr = 0.0
-	last_rain_1hr = 0.0
 	rain_rate = 0.0
 	rain_day = 0.0
-#	rain_24hr = 0.0
 	last_rain_day = 0.0
 	total_rain = 0.0
 	last_total_rain = 0.0
@@ -197,22 +194,21 @@ BEGIN {
 						windspd = (val[2] + 0.0) * 4.4704 # wind speed, mph, convert to 0.1 m/s
 						windgust = (val[3] + 0.0) * 4.4704  # wind gust, mph, convert to 0.1 m/s
 						temp = ftoc(val[4] + 0.0) * 10 # temp, °F convert to 0.1 °C
-						rain_1hr = (val[5] + 0.0) * 2.54 # rain in last hr, 0.01 in, convert to 0.1 mm
+#						rain_1hr = (val[5] + 0.0) * 2.54 # rain in last hr, 0.01 in, convert to 0.1 mm
 #						rain_24hr = (val[6] + 0.0) * 2.54  # rain in last 24 hrs, 0.01 in, convert to 0.1 mm
 						rain_day = (val[7] + 0.0) * 2.54 # rain since midnight, 0.01 in, convert to 0.1 mm
 						hum = (val[8] == 0? 100: val[8] + 0.0) # hum, %  (00 == 100%)
 						baro = alttosta(val[9] / 10.0, station_altitude) * 10 # convert altimiter to station press, 0.1 millibar
 
-						
-						if(rain_1hr > last_rain_1hr)
-							rain_rate = ((rain_1hr - last_rain_1hr) / ((this_time - last_time) / 3600.0)) # increasing rain rate in 0.1 mm/hr
-						else
-							rain_rate = 0.0
-
 						if(rain_day >= last_rain_day)
 							total_rain += (rain_day - last_rain_day)
 						else
 							total_rain += rain_day
+
+						if(total_rain > last_total_rain)
+							rain_rate = ((total_rain - last_total_rain) / ((this_time - last_time) / 3600.0)) # increasing rain rate in 0.1 mm/hr
+						else
+							rain_rate = 0.0
 
 						if(total_rain > 999999) # keep total rain from eventually overflowing
 							total_rain = 0
@@ -235,7 +231,6 @@ BEGIN {
 							system(uci)
 						}
 
-						last_rain_1hr = rain_1hr
 						last_rain_day = rain_day
 						last_total_rain = total_rain
 						last_time = this_time
