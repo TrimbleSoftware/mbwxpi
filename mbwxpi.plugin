@@ -25,7 +25,7 @@
 #	weatherstation. Operation of the plugin is customized by editing the
 #	accompanying UCI style config file.
 #
-#	Written 25-Mar-2021 by Fred T. Trimble Ver 0.9.8a (ftt@smtcpa.com) and user AlaskaWX on Meteobridge forum
+#	Written 25-Mar-2021 by Fred T. Trimble Ver 0.9.8b (ftt@smtcpa.com) and user AlaskaWX on Meteobridge forum
 #
 #	wxnow.txt file format per https://cumuluswiki.org/a/Wxnow.txt
 #	Feb 01 2009 12:34
@@ -64,7 +64,7 @@ function ftoc (f)
 BEGIN {
 
 	myname = "mbwxpi"
-	ver = "0.9.8a" # version
+	ver = "0.9.8b" # version
 	exit_code = -1
 	last_time = 0.0
 	this_time = 0.0
