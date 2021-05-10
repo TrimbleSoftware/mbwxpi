@@ -68,6 +68,7 @@ BEGIN {
 	exit_code = -1
 	last_time = 0.0
 	this_time = 0.0
+	rain_reset_month = 1 # month to reset total rain, 1 == Jan, 2 == Feb, etc.
 	rain_rate = 0.0
 	rain_day = 0.0
 	last_rain_day = 0.0
@@ -213,10 +214,6 @@ BEGIN {
 						else
 							rain_rate = 0.0
 
-						t = systime()
-						if(((strftime("%j", t) - 1) * 24 * 3600 + strftime("%H", t) * 3600 + strftime("%M", t) * 60  + strftime("%S", t)) <= (pollsleep * 2)) # reset total rain within 2x polling period of midnight, Jan 1
-							total_rain = 0
-
 						# ...and output values to meteobridge via stdout as SI units using source data timestamp
 						printf(":%s th0 %1.0f %d\n", this_time, temp, hum) # temp 0.1 °C, % hum
 						printf(":%s thb0 %1.0f %d %1.0f\n", this_time, temp, hum, baro) # temp °C, % hum, baro 0.1 mb
@@ -255,6 +252,11 @@ BEGIN {
 			wxnow_raw = ""
 			delete wxnow_line
 			t = systime()
+			if(total_rain > 0 && (strftime("%m", t) == rain_reset_month && strftime("%d", t) == 1 && strftime("%H", t) == 0 && strftime("%M", t) == 0 && strftime("%S", t) <= (pollsleep * 2))) # reset total rain within 2x polling period of midnight
+			{
+				total_rain = 0
+				last_total_rain = -1
+			}
 			ssm = strftime("%S", t) + (strftime("%M", t) * 60) + (strftime("%H", t) * 3600) # seconds since midnight
 			exit_code = system("sleep "pollsleep - (ssm % pollsleep)" && exit 27") # polling sleep
 
