@@ -146,7 +146,7 @@ BEGIN {
 	}
 
 	t = systime()
-	ssm = strftime("%S",t) + (strftime("%M",t) * 60) + (strftime("%H",t) * 3600) # seconds since midnight
+	ssm = strftime("%S", t) + (strftime("%M", t) * 60) + (strftime("%H", t) * 3600) # seconds since midnight
 	if(pollsleep - ((ssm % pollsleep) > 0))
 	{
 		if(writetolog > 1)
@@ -213,7 +213,8 @@ BEGIN {
 						else
 							rain_rate = 0.0
 
-						if(total_rain > 999999) # keep total rain from eventually overflowing
+						t = systime()
+						if(((strftime("%j", t) - 1) * 24 * 3600 + strftime("%H", t) * 3600 + strftime("%M", t) * 60  + strftime("%S", t)) <= (pollsleep * 2)) # reset total rain within 2x polling period of midnight, Jan 1
 							total_rain = 0
 
 						# ...and output values to meteobridge via stdout as SI units using source data timestamp
@@ -254,7 +255,7 @@ BEGIN {
 			wxnow_raw = ""
 			delete wxnow_line
 			t = systime()
-			ssm = strftime("%S",t) + (strftime("%M",t) * 60) + (strftime("%H",t) * 3600) # seconds since midnight
+			ssm = strftime("%S", t) + (strftime("%M", t) * 60) + (strftime("%H", t) * 3600) # seconds since midnight
 			exit_code = system("sleep "pollsleep - (ssm % pollsleep)" && exit 27") # polling sleep
 
 		} while(exit_code != 0)
