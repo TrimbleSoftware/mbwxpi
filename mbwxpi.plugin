@@ -25,7 +25,7 @@
 #	weatherstation. Operation of the plugin is customized by editing the
 #	accompanying UCI style config file.
 #
-#	Written 25-Mar-2021 by Fred T. Trimble Ver 0.9.8b (ftt@smtcpa.com) and user AlaskaWX on Meteobridge forum
+#	Written 25-Mar-2021 by Fred T. Trimble Ver 0.9.8c (ftt@smtcpa.com) and user AlaskaWX on Meteobridge forum
 #
 #	wxnow.txt file format per https://cumuluswiki.org/a/Wxnow.txt
 #	Feb 01 2009 12:34
@@ -64,7 +64,7 @@ function ftoc (f)
 BEGIN {
 
 	myname = "mbwxpi"
-	ver = "0.9.8b" # version
+	ver = "0.9.8c" # version
 	exit_code = -1
 	last_time = 0.0
 	this_time = 0.0
@@ -252,7 +252,11 @@ BEGIN {
 			wxnow_raw = ""
 			delete wxnow_line
 			t = systime()
-			if(total_rain > 0 && (strftime("%m", t) == rain_reset_month && strftime("%d", t) == 1 && strftime("%H", t) == 0 && strftime("%M", t) == 0 && strftime("%S", t) <= (pollsleep * 2))) # reset total rain within 2x polling period of midnight
+			# reset total rain within 2x polling period of midnight
+			if(total_rain > 0 && strftime("%m", t) + 0.0 == rain_reset_month + 0.0 \
+				&& strftime("%d", t) + 0.0 == 1.0 \
+				&& strftime("%H", t) + 0.0 == 0.0 \
+				&& strftime("%M", t) * 60 + 0.0 <= pollsleep * 2 + 0.0) 
 			{
 				total_rain = 0
 				last_total_rain = -1
