@@ -68,7 +68,6 @@ BEGIN {
 	exit_code = -1
 	last_time = 0.0
 	this_time = 0.0
-	rain_reset_month = 1 # month to reset total rain, 1 == Jan, 2 == Feb, etc.
 	rain_rate = 0.0
 	rain_day = 0.0
 	last_rain_day = 0.0
@@ -92,6 +91,7 @@ BEGIN {
 	# the os command used to return the content of the wxnow.txt file
 	wxnow_cmd = "wget -q -O - 'http://localhost/public/wxnow.txt'"
 	station_altitude	 = 0.0
+	rain_reset_month = 1 # month to reset total rain, 1 == Jan, 2 == Feb, etc.
 	logfile = "/tmp/log/meteobridge.log"
 	pollsleep = 60
 	writetolog = 0
@@ -111,6 +111,12 @@ BEGIN {
 	close(uci)
 	if(length(item) > 0)
 		station_altitude = item + 0.0
+	uci = "uci -c "conf" get "myname".@"myname"[0].rain_reset_month 2>/dev/null"
+	item = ""	
+	uci | getline item
+	close(uci)
+	if(length(item) > 0)
+		rain_reset_month = item + 0.0
 	uci = "uci -c "conf" get "myname".@"myname"[0].total_rain 2>/dev/null"
 	item = ""	
 	uci | getline item
