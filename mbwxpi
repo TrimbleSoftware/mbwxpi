@@ -5,10 +5,13 @@ config mbwxpi
 	option wxnow_cmd "wget -q -O - 'http://104.56.43.104/wxnow.txt' 2>/dev/null"
 		# station altitude in meters
 	option station_altitude "277.98"
+		# month number to rest total rain to 0, 1 == Jan, 2 == Feb etc.
+	option rain_reset_month '1'
 		# pathname to meteobridge logfile
-option logfile "/tmp/log/mbwxpi.log"
-#	option logfile "/tmp/log/meteobridge.log"
+	option logfile "/tmp/log/meteobridge.log"
 		# plugin polling interval in seconds
 	option pollsleep "60"
 		# flag set to 3 for vebose logging, 2 to write brief messages to logfile, set to 1 for no logging, except errors, set to 0 for no logging
 	option writetolog "2"
+		# total rainfall accumulated from wxnow.txt file over time
+	option total_rain '4713'
