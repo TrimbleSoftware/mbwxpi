@@ -91,7 +91,7 @@ BEGIN {
 	# the os command used to return the content of the wxnow.txt file
 	wxnow_cmd = "wget -q -O - 'http://localhost/public/wxnow.txt'"
 	station_altitude	 = 0.0
-	rain_reset_month = 1 # month to reset total rain, 1 == Jan, 2 == Feb, etc.
+	rain_reset_month = 1 # month to reset annual rain, 1 == Jan, 2 == Feb, etc.
 	logfile = "/tmp/log/meteobridge.log"
 	pollsleep = 60
 	writetolog = 0
@@ -266,7 +266,11 @@ BEGIN {
 			{
 				total_rain = 0
 				last_total_rain = -1
-				writelog(logfile, myname, "reset total rain for start of rain year.")
+				uci = "uci -c "conf" set "myname".@"myname"[0].total_rain='"sprintf("%1.0f", total_rain)"' 2>/dev/null"
+				system(uci)
+				uci = "uci -c "conf" commit "myname" 2>/dev/null"
+				system(uci)
+				writelog(logfile, myname, "reset annual rain.")
 			}
 			ssm = strftime("%S", t) + (strftime("%M", t) * 60) + (strftime("%H", t) * 3600) # seconds since midnight
 			exit_code = system("sleep "pollsleep - (ssm % pollsleep)" && exit 27") # polling sleep
