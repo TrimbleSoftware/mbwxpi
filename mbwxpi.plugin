@@ -270,7 +270,8 @@ BEGIN {
 				system(uci)
 				uci = "uci -c "conf" commit "myname" 2>/dev/null"
 				system(uci)
-				writelog(logfile, myname, "reset annual rain.")
+				if(writetolog > 1)
+					writelog(logfile, myname, "reset annual rain.")
 			}
 			ssm = strftime("%S", t) + (strftime("%M", t) * 60) + (strftime("%H", t) * 3600) # seconds since midnight
 			exit_code = system("sleep "pollsleep - (ssm % pollsleep)" && exit 27") # polling sleep
