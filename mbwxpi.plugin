@@ -266,6 +266,7 @@ BEGIN {
 			{
 				total_rain = 0
 				last_total_rain = -1
+				writelog(logfile, myname, "reset total rain for start of rain year.")
 			}
 			ssm = strftime("%S", t) + (strftime("%M", t) * 60) + (strftime("%H", t) * 3600) # seconds since midnight
 			exit_code = system("sleep "pollsleep - (ssm % pollsleep)" && exit 27") # polling sleep
