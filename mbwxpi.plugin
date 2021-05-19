@@ -25,7 +25,7 @@
 #	weatherstation. Operation of the plugin is customized by editing the
 #	accompanying UCI style config file.
 #
-#	Written 25-Mar-2021 by Fred T. Trimble Ver 0.9.8c (ftt@smtcpa.com) and user AlaskaWX on Meteobridge forum
+#	Written 25-Mar-2021 by Fred T. Trimble Ver 0.9.8d (ftt@smtcpa.com) and user AlaskaWX on Meteobridge forum
 #
 #	wxnow.txt file format per https://cumuluswiki.org/a/Wxnow.txt
 #	Feb 01 2009 12:34
@@ -64,7 +64,7 @@ function ftoc (f)
 BEGIN {
 
 	myname = "mbwxpi"
-	ver = "0.9.8c" # version
+	ver = "0.9.8d" # version
 	exit_code = -1
 	last_time = 0.0
 	this_time = 0.0
@@ -167,10 +167,22 @@ BEGIN {
 		do # main plugin infinite loop
 		{
 			i = 1
-			while((wxnow_cmd | getline wxnow_raw) > 0) # run os cmd to get raw data from wxnow.txt
-				wxnow_line[i++] = wxnow_raw
+			do
+			{
+				rc = wxnow_cmd | getline wxnow_raw
+				if (rc > 0)
+					wxnow_line[i++] = wxnow_raw
 
-			close(wxnow_cmd)
+			} while (rc > 0)
+
+			rcc = close(wxnow_cmd)
+
+			if (rc <= 0) # getline error...
+					if(writetolog > 0)
+						writelog(logfile, myname, sprintf("error %d, executing os command %s", rcc, wxnow_cmd))
+
+			else
+			{
 
 			if(length(wxnow_line[1]) > 0)
 			{
@@ -185,75 +197,75 @@ BEGIN {
 				}
 			}
 
-			if(this_time > last_time) # is data new?
-			{ 
-				#if it's new, parse...
-				if(length(wxnow_line[2]) > 0)
-				{
-					if(split(wxnow_line[2], val, /[\/,g,t,r,p,P,h,b]/) == 9) # regexp to parse wx data
+				if(this_time > last_time) # is data new?
+				{ 
+					#if it's new, parse...
+					if(length(wxnow_line[2]) > 0)
 					{
-						if(writetolog > 2)
+						if(split(wxnow_line[2], val, /[\/,g,t,r,p,P,h,b]/) == 9) # regexp to parse wx data
 						{
-							writelog(logfile, myname, sprintf("wxnow_line[2] == %s", wxnow_line[2]))
-							for(i in val)
-								writelog(logfile, myname, sprintf("val[%d] == %s", i, val[i]))
+							if(writetolog > 2)
+							{
+								writelog(logfile, myname, sprintf("wxnow_line[2] == %s", wxnow_line[2]))
+								for(i in val)
+									writelog(logfile, myname, sprintf("val[%d] == %s", i, val[i]))
+							}
+
+							# convert data into fractional SI units as req by meteobridge
+							winddir = val[1] + 0.0 # wind dir, deg
+							windspd = (val[2] + 0.0) * 4.4704 # wind speed, mph, convert to 0.1 m/s
+							windgust = (val[3] + 0.0) * 4.4704  # wind gust, mph, convert to 0.1 m/s
+							temp = ftoc(val[4] + 0.0) * 10 # temp, °F convert to 0.1 °C
+	#						rain_1hr = (val[5] + 0.0) * 2.54 # rain in last hr, 0.01 in, convert to 0.1 mm
+	#						rain_24hr = (val[6] + 0.0) * 2.54  # rain in last 24 hrs, 0.01 in, convert to 0.1 mm
+							rain_day = (val[7] + 0.0) * 2.54 # rain since midnight, 0.01 in, convert to 0.1 mm
+							hum = (val[8] == 0? 100: val[8] + 0.0) # hum, %  (00 == 100%)
+							baro = alttosta(val[9] / 10.0, station_altitude) * 10 # convert altimiter to station press, 0.1 millibar
+
+							if(rain_day >= last_rain_day)
+								total_rain += (rain_day - last_rain_day)
+							else
+								total_rain += rain_day
+
+							if(total_rain > last_total_rain)
+								rain_rate = ((total_rain - last_total_rain) / ((this_time - last_time) / 3600.0)) # increasing rain rate in 0.1 mm/hr
+							else
+								rain_rate = 0.0
+
+							# ...and output values to meteobridge via stdout as SI units using source data timestamp
+							printf(":%s th0 %1.0f %d\n", this_time, temp, hum) # temp 0.1 °C, % hum
+							printf(":%s thb0 %1.0f %d %1.0f\n", this_time, temp, hum, baro) # temp °C, % hum, baro 0.1 mb
+							printf(":%s wind0 %d %1.0f %1.0f\n", this_time, winddir, windgust, windspd) # gust, wind speed 0.1 m/s
+							printf(":%s rain0 %1.0f %1.0f\n", this_time, rain_rate, total_rain) # rain rate, total rain, 0.1 mm
+
+							if(writetolog > 2)
+								writelog(logfile, myname, "output sensor data to meteobridge with timestamp: "this_time)
+
+							if(total_rain > last_total_rain)
+							{
+								# save total rain to uci config file
+								uci = "uci -c "conf" set "myname".@"myname"[0].total_rain='"sprintf("%1.0f", total_rain)"' 2>/dev/null"
+								system(uci)
+								uci = "uci -c "conf" commit "myname" 2>/dev/null"
+								system(uci)
+							}
+
+							last_rain_day = rain_day
+							last_total_rain = total_rain
+							last_time = this_time
+
+							delete val
 						}
-
-						# convert data into fractional SI units as req by meteobridge
-						winddir = val[1] + 0.0 # wind dir, deg
-						windspd = (val[2] + 0.0) * 4.4704 # wind speed, mph, convert to 0.1 m/s
-						windgust = (val[3] + 0.0) * 4.4704  # wind gust, mph, convert to 0.1 m/s
-						temp = ftoc(val[4] + 0.0) * 10 # temp, °F convert to 0.1 °C
-#						rain_1hr = (val[5] + 0.0) * 2.54 # rain in last hr, 0.01 in, convert to 0.1 mm
-#						rain_24hr = (val[6] + 0.0) * 2.54  # rain in last 24 hrs, 0.01 in, convert to 0.1 mm
-						rain_day = (val[7] + 0.0) * 2.54 # rain since midnight, 0.01 in, convert to 0.1 mm
-						hum = (val[8] == 0? 100: val[8] + 0.0) # hum, %  (00 == 100%)
-						baro = alttosta(val[9] / 10.0, station_altitude) * 10 # convert altimiter to station press, 0.1 millibar
-
-						if(rain_day >= last_rain_day)
-							total_rain += (rain_day - last_rain_day)
 						else
-							total_rain += rain_day
-
-						if(total_rain > last_total_rain)
-							rain_rate = ((total_rain - last_total_rain) / ((this_time - last_time) / 3600.0)) # increasing rain rate in 0.1 mm/hr
-						else
-							rain_rate = 0.0
-
-						# ...and output values to meteobridge via stdout as SI units using source data timestamp
-						printf(":%s th0 %1.0f %d\n", this_time, temp, hum) # temp 0.1 °C, % hum
-						printf(":%s thb0 %1.0f %d %1.0f\n", this_time, temp, hum, baro) # temp °C, % hum, baro 0.1 mb
-						printf(":%s wind0 %d %1.0f %1.0f\n", this_time, winddir, windgust, windspd) # gust, wind speed 0.1 m/s
-						printf(":%s rain0 %1.0f %1.0f\n", this_time, rain_rate, total_rain) # rain rate, total rain, 0.1 mm
-
-						if(writetolog > 2)
-							writelog(logfile, myname, "output sensor data to meteobridge with timestamp: "this_time)
-
-						if(total_rain > last_total_rain)
 						{
-							# save total rain to uci config file
-							uci = "uci -c "conf" set "myname".@"myname"[0].total_rain='"sprintf("%1.0f", total_rain)"' 2>/dev/null"
-							system(uci)
-							uci = "uci -c "conf" commit "myname" 2>/dev/null"
-							system(uci)
+							if(writetolog > 0)
+								writelog(logfile, myname, "error parsing wxnow.txt weather data: "wxnow_line[2])
+
+								continue
 						}
-
-						last_rain_day = rain_day
-						last_total_rain = total_rain
-						last_time = this_time
-
-						delete val
 					}
-					else
-					{
-						if(writetolog > 0)
-							writelog(logfile, myname, "error parsing wxnow.txt weather data: "wxnow_line[2])
-
-							continue
-					}
-				}
-			}
-
+				} # if
+			} # else 
 			system("") # flush all i/o buffers
 			wxnow_raw = ""
 			delete wxnow_line
