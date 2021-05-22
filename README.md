@@ -3,7 +3,7 @@ MBWXPI (MeteoBridge WXnow.txt PlugIn)
 Meteobridge user-defined plugin weatherstation to read, parse, convert and output weather data contained in a wxnow.txt file as a Meteobridge weatherstation. 
 Operation of the plugin is customized by editing the accompanying UCI style config file.
 
-This plugin is implemented as a rather sophisticated AWK script that downloads, parses, converts and outputs the values containd in a Cumulus or Weewx style wxnow.txt file into Meteobridge as user defined plugin weatherstation. 
+This plugin is implemented as a rather sophisticated AWK script that downloads, parses, converts and outputs the values containd in a Cumulus or Weewx style wxnow.txt file into Meteobridge as user defined plugin weatherstation. The wxnow.txt file format is documented here: https://cumuluswiki.org/a/Wxnow.txt
 
 The plugin has configurable options that are stored in the Openwrt UCI style configuration file named "mbwxpi". The following settings are configurable:
  
